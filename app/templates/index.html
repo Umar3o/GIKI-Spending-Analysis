@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GIKI Spending Predictor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <p class="subtitle">DS211 &mdash; Student Spending Analysis</p>
+      <h1>GIKI Spending Predictor</h1>
+      <p class="tagline">Estimate your monthly variable spend based on your demographic profile</p>
+    </header>
+
+    {% if error %}
+    <div class="alert">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/predict" class="card">
+      <div class="form-grid">
+        <div class="field">
+          <label for="age">Age</label>
+          <input
+            type="number"
+            id="age"
+            name="age"
+            min="16"
+            max="30"
+            step="1"
+            placeholder="e.g. 20"
+            value="{{ form.age if form else '' }}"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="year">Year of Study</label>
+          <select id="year" name="year" required>
+            <option value="" disabled {% if not form %}selected{% endif %}>Select year</option>
+            {% for y in years %}
+            <option value="{{ y }}" {% if form and form.year == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="major">Faculty / Major</label>
+          <select id="major" name="major" required>
+            <option value="" disabled {% if not form %}selected{% endif %}>Select major</option>
+            {% for m in majors %}
+            <option value="{{ m }}" {% if form and form.major == m %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="gender">Gender</label>
+          <select id="gender" name="gender" required>
+            <option value="" disabled {% if not form %}selected{% endif %}>Select gender</option>
+            {% for g in genders %}
+            <option value="{{ g }}" {% if form and form.gender == g %}selected{% endif %}>{{ g }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field full-width">
+          <label for="allowance">Monthly Allowance (PKR)</label>
+          <input
+            type="number"
+            id="allowance"
+            name="allowance"
+            min="0"
+            step="100"
+            placeholder="e.g. 40000"
+            value="{{ form.allowance | int if form else '' }}"
+            required
+          />
+        </div>
+      </div>
+
+      <button type="submit" class="btn">Predict Spend</button>
+    </form>
+
+    {% if result %}
+    <div class="card result-card">
+      <h2>Prediction Result</h2>
+      <div class="result-grid">
+        <div class="metric">
+          <span class="metric-label">Predicted Monthly Spend</span>
+          <span class="metric-value">PKR {{ "{:,.0f}".format(result.predicted_spend) }}</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Monthly {{ 'Surplus' if result.surplus >= 0 else 'Deficit' }}</span>
+          <span class="metric-value {{ 'surplus' if result.surplus >= 0 else 'deficit' }}">
+            PKR {{ "{:,.0f}".format(result.surplus | abs) }}
+          </span>
+        </div>
+        <div class="metric full-width">
+          <span class="metric-label">Financial Health</span>
+          <span class="status status-{{ result.status | lower }}">{{ result.status }}</span>
+        </div>
+      </div>
+      <p class="note">
+        Model: Ridge Regression &mdash; 5-fold CV MAE &asymp; PKR 15,194
+      </p>
+    </div>
+    {% endif %}
+
+    <footer>
+      <p>GIKI &middot; DS211 Research Project &middot; 2025</p>
+    </footer>
+  </div>
+</body>
+</html>
